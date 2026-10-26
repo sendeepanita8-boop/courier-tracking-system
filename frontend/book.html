@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book a Courier – CourierTrack</title>
+  <meta name="description" content="Book a courier shipment online. Fill in sender and receiver details to get your unique tracking number instantly."/>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    .book-page { padding: var(--space-12) 0 var(--space-20); }
+    .book-container { max-width: 820px; margin: 0 auto; }
+    .section-divider {
+      display: flex; align-items: center; gap: var(--space-4);
+      margin: var(--space-6) 0;
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--clr-border);
+    }
+    .section-divider span {
+      font-size: var(--fs-sm); font-weight: 700;
+      color: var(--clr-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      white-space: nowrap;
+    }
+    .courier-type-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3);
+    }
+    @media (max-width: 480px) { .courier-type-grid { grid-template-columns: 1fr; } }
+    .courier-type-option { position: relative; }
+    .courier-type-option input[type=radio] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+    .courier-type-label {
+      display: flex; flex-direction: column; gap: var(--space-1);
+      padding: var(--space-4); border-radius: var(--radius-md);
+      border: 2px solid var(--clr-border);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .courier-type-label:hover { border-color: var(--clr-primary); background: var(--clr-primary-lt); }
+    .courier-type-option input:checked + .courier-type-label {
+      border-color: var(--clr-primary);
+      background: var(--clr-primary-lt);
+      box-shadow: 0 0 0 3px rgba(245,166,35,.2);
+    }
+    .courier-type-name  { font-weight: 700; font-size: var(--fs-sm); color: var(--clr-accent); }
+    .courier-type-desc  { font-size: var(--fs-xs); color: var(--clr-muted); }
+    .courier-type-price { font-size: var(--fs-lg); font-weight: 800; color: var(--clr-primary-dk); }
+
+    /* Success state */
+    .success-state {
+      text-align: center; padding: var(--space-12) var(--space-8);
+    }
+    .success-icon { font-size: 4rem; margin-bottom: var(--space-4); }
+    .tracking-number-display {
+      background: var(--clr-primary-lt);
+      border: 2px dashed var(--clr-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6) var(--space-8);
+      margin: var(--space-6) auto;
+      max-width: 360px;
+    }
+    .tracking-number-display__label { font-size: var(--fs-xs); font-weight: 700; color: var(--clr-muted); text-transform: uppercase; letter-spacing: .08em; }
+    .tracking-number-display__value { font-size: var(--fs-3xl); font-weight: 900; color: var(--clr-accent); letter-spacing: .05em; margin-top: var(--space-2); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand"><div class="navbar__brand-icon">📦</div>CourierTrack</a>
+    <div class="navbar__nav">
+      <a href="/" class="navbar__link">🏠 Home</a>
+      <a href="/track" class="navbar__link">🔍 Track</a>
+      <a href="/book" class="navbar__link active">✉️ Book</a>
+      <a href="/login" class="navbar__link btn-nav">⚙️ Admin</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1>Book a Courier</h1>
+    <p class="page-header__subtitle">Fill in the details below to create a new shipment</p>
+  </div>
+</div>
+
+<div class="book-page">
+  <div class="container">
+    <div class="book-container">
+
+      <!-- Booking Form -->
+      <div id="booking-form-container">
+        <form id="booking-form" novalidate>
+
+          <!-- Global error -->
+          <div id="form-error" class="alert alert-error mb-4 hidden">
+            <span class="alert__icon">⚠️</span>
+            <span id="form-error-msg"></span>
+          </div>
+
+          <!-- Card: Sender -->
+          <div class="card mb-4">
+            <div class="card__header">
+              <div class="card__title">📤 Sender Details</div>
+            </div>
+            <div class="card__body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="sender_name">Full Name *</label>
+                  <input type="text" id="sender_name" name="sender_name" class="form-control" placeholder="Arjun Sharma" required/>
+                  <div class="form-error" id="err-sender_name"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="sender_phone">Phone Number *</label>
+                  <input type="tel" id="sender_phone" name="sender_phone" class="form-control" placeholder="9876543210" required/>
+                  <div class="form-error" id="err-sender_phone"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="sender_email">Email Address</label>
+                  <input type="email" id="sender_email" name="sender_email" class="form-control" placeholder="arjun@example.com"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="sender_address">Address</label>
+                  <input type="text" id="sender_address" name="sender_address" class="form-control" placeholder="12 MG Road, Bangalore"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Receiver -->
+          <div class="card mb-4">
+            <div class="card__header">
+              <div class="card__title">📥 Receiver Details</div>
+            </div>
+            <div class="card__body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="receiver_name">Full Name *</label>
+                  <input type="text" id="receiver_name" name="receiver_name" class="form-control" placeholder="Priya Patel" required/>
+                  <div class="form-error" id="err-receiver_name"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="receiver_phone">Phone Number *</label>
+                  <input type="tel" id="receiver_phone" name="receiver_phone" class="form-control" placeholder="9876543211" required/>
+                  <div class="form-error" id="err-receiver_phone"></div>
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label" for="receiver_address">Delivery Address</label>
+                  <input type="text" id="receiver_address" name="receiver_address" class="form-control" placeholder="45 Linking Road, Mumbai"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Shipment Details -->
+          <div class="card mb-4">
+            <div class="card__header">
+              <div class="card__title">📋 Shipment Details</div>
+            </div>
+            <div class="card__body">
+              <div class="form-group mb-4">
+                <label class="form-label">Courier Type *</label>
+                <div class="courier-type-grid">
+                  <div class="courier-type-option">
+                    <input type="radio" name="courier_type" id="type_standard" value="Standard" checked/>
+                    <label class="courier-type-label" for="type_standard">
+                      <span class="courier-type-name">📦 Standard</span>
+                      <span class="courier-type-desc">5–7 business days</span>
+                      <span class="courier-type-price">₹50</span>
+                    </label>
+                  </div>
+                  <div class="courier-type-option">
+                    <input type="radio" name="courier_type" id="type_express" value="Express"/>
+                    <label class="courier-type-label" for="type_express">
+                      <span class="courier-type-name">⚡ Express</span>
+                      <span class="courier-type-desc">1–2 business days</span>
+                      <span class="courier-type-price">₹150</span>
+                    </label>
+                  </div>
+                  <div class="courier-type-option">
+                    <input type="radio" name="courier_type" id="type_overnight" value="Overnight"/>
+                    <label class="courier-type-label" for="type_overnight">
+                      <span class="courier-type-name">🌙 Overnight</span>
+                      <span class="courier-type-desc">Next business day</span>
+                      <span class="courier-type-price">₹250</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="form-error" id="err-courier_type"></div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="weight_kg">Parcel Weight (kg) *</label>
+                  <input type="number" id="weight_kg" name="weight_kg" class="form-control" placeholder="1.5" step="0.1" min="0.1" required/>
+                  <div class="form-error" id="err-weight_kg"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="expected_delivery">Expected Delivery Date</label>
+                  <input type="date" id="expected_delivery" name="expected_delivery" class="form-control"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-full" id="submit-btn">
+            📦 Book Shipment
+          </button>
+        </form>
+      </div>
+
+      <!-- Success State -->
+      <div id="booking-success" class="card hidden">
+        <div class="card__body success-state">
+          <div class="success-icon">✅</div>
+          <h2>Shipment Booked Successfully!</h2>
+          <p style="margin-top:var(--space-3);">Your parcel is registered and will be picked up shortly.</p>
+          <div class="tracking-number-display">
+            <div class="tracking-number-display__label">Your Tracking Number</div>
+            <div class="tracking-number-display__value" id="success-tn"></div>
+          </div>
+          <p style="color:var(--clr-muted);font-size:var(--fs-sm);margin-bottom:var(--space-6);">
+            Save this number to track your shipment's progress.
+          </p>
+          <div style="display:flex;gap:var(--space-4);justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="trackSuccess()">🔍 Track Now</button>
+            <button class="btn btn-secondary" onclick="bookAnother()">📦 Book Another</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__bottom">
+      <span>© 2024 CourierTrack. RDBMS College Project.</span>
+      <span><a href="/" class="footer__link" style="display:inline;">← Back to Home</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/book.js"></script>
+</body>
+</html>

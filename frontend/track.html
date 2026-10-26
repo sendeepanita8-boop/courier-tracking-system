@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Shipment – CourierTrack</title>
+  <meta name="description" content="Track your courier shipment in real-time. Enter your tracking number to see status and delivery history."/>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    .track-page { padding: var(--space-12) 0 var(--space-20); }
+    .track-search-card {
+      max-width: 640px; margin: 0 auto var(--space-8);
+      background: var(--clr-surface);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--clr-border);
+    }
+    .track-search-card h2 { margin-bottom: var(--space-2); }
+    .track-search-card p  { margin-bottom: var(--space-6); }
+    .track-input-row { display: flex; gap: var(--space-3); }
+    .track-input-row input { flex: 1; }
+    @media (max-width: 480px) { .track-input-row { flex-direction: column; } }
+
+    /* Result card */
+    .result-container { max-width: 800px; margin: 0 auto; }
+    .shipment-header {
+      background: linear-gradient(135deg, var(--clr-accent), var(--clr-accent-lt));
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: var(--space-6) var(--space-8);
+      color: #fff;
+    }
+    .shipment-header__tn {
+      font-size: var(--fs-sm); font-weight: 600;
+      color: rgba(255,255,255,.6); margin-bottom: var(--space-2);
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .shipment-header__status { display: flex; align-items: center; gap: var(--space-4); }
+    .shipment-header__title  { font-size: var(--fs-3xl); font-weight: 800; }
+    .shipment-body { border-radius: 0 0 var(--radius-xl) var(--radius-xl); border: 1px solid var(--clr-border); border-top: none; }
+    .info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-1) var(--space-6);
+      padding: var(--space-6) var(--space-8);
+      border-bottom: 1px solid var(--clr-border);
+    }
+    @media (max-width: 560px) { .info-grid { grid-template-columns: 1fr; } }
+    .info-row { padding: var(--space-3) 0; border-bottom: 1px solid var(--clr-border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: var(--fs-xs); font-weight: 700; color: var(--clr-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+    .info-value { font-size: var(--fs-sm); font-weight: 500; color: var(--clr-text); }
+    .party-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-4); padding: var(--space-6) var(--space-8);
+      border-bottom: 1px solid var(--clr-border);
+    }
+    @media (max-width: 560px) { .party-grid { grid-template-columns: 1fr; } }
+    .party-card {
+      background: var(--clr-bg);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      border: 1px solid var(--clr-border);
+    }
+    .party-card__role { font-size: var(--fs-xs); font-weight: 700; color: var(--clr-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: var(--space-2); }
+    .party-card__name { font-weight: 700; color: var(--clr-text); margin-bottom: var(--space-1); }
+    .party-card__addr { font-size: var(--fs-xs); color: var(--clr-muted); }
+    .timeline-section { padding: var(--space-6) var(--space-8); }
+    .timeline-section h4 { margin-bottom: var(--space-6); color: var(--clr-accent); }
+
+    /* Empty / Error states */
+    .state-box {
+      max-width: 480px; margin: 0 auto;
+      text-align: center; padding: var(--space-16) var(--space-8);
+    }
+    .state-box__icon { font-size: 4rem; margin-bottom: var(--space-4); }
+    .state-box__title { font-size: var(--fs-2xl); font-weight: 700; margin-bottom: var(--space-3); }
+    .state-box__desc  { color: var(--clr-muted); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand"><div class="navbar__brand-icon">📦</div>CourierTrack</a>
+    <div class="navbar__nav">
+      <a href="/" class="navbar__link">🏠 Home</a>
+      <a href="/track" class="navbar__link active">🔍 Track</a>
+      <a href="/book" class="navbar__link">✉️ Book</a>
+      <a href="/login" class="navbar__link btn-nav">⚙️ Admin</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1>Track Your Shipment</h1>
+    <p class="page-header__subtitle">Enter your tracking number to get real-time updates</p>
+  </div>
+</div>
+
+<div class="track-page">
+  <div class="container">
+
+    <!-- Search card -->
+    <div class="track-search-card">
+      <h2>🔍 Shipment Lookup</h2>
+      <p>Enter the tracking number provided at the time of booking.</p>
+      <div class="track-input-row">
+        <input
+          type="text"
+          id="tracking-input"
+          class="form-control"
+          placeholder="e.g. CTS-2024-00001"
+          aria-label="Tracking number"
+          maxlength="20"
+        />
+        <button class="btn btn-primary" id="track-btn" onclick="trackShipment()">
+          Track
+        </button>
+      </div>
+      <div id="search-error" class="form-error mt-4" style="display:none;"></div>
+    </div>
+
+    <!-- Result area -->
+    <div class="result-container" id="result-area">
+
+      <!-- Initial state -->
+      <div id="state-initial" class="state-box">
+        <div class="state-box__icon">📬</div>
+        <div class="state-box__title">Enter a Tracking Number</div>
+        <div class="state-box__desc">Your shipment status and delivery timeline will appear here.</div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="state-loading" class="state-box hidden">
+        <div class="spinner spinner-lg" style="margin: 0 auto var(--space-4);"></div>
+        <div class="state-box__title">Looking up your shipment…</div>
+      </div>
+
+      <!-- Not found state -->
+      <div id="state-notfound" class="state-box hidden">
+        <div class="state-box__icon">🔍</div>
+        <div class="state-box__title">Shipment Not Found</div>
+        <div class="state-box__desc" id="notfound-msg">We couldn't find a shipment with that tracking number. Please double-check and try again.</div>
+        <div class="mt-8">
+          <a href="/book" class="btn btn-primary">Book a New Courier</a>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="state-error" class="state-box hidden">
+        <div class="state-box__icon">⚠️</div>
+        <div class="state-box__title">Service Unavailable</div>
+        <div class="state-box__desc">We're having trouble connecting to the server. Please try again in a moment.</div>
+      </div>
+
+      <!-- Success state -->
+      <div id="state-result" class="hidden">
+        <div class="shipment-header">
+          <div class="shipment-header__tn" id="res-tn"></div>
+          <div class="shipment-header__status">
+            <div class="shipment-header__title" id="res-status"></div>
+            <div id="res-badge"></div>
+          </div>
+        </div>
+        <div class="shipment-body card">
+          <!-- Key info -->
+          <div class="info-grid">
+            <div class="info-row">
+              <div class="info-label">Courier Type</div>
+              <div class="info-value" id="res-type"></div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Weight</div>
+              <div class="info-value" id="res-weight"></div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Booking Date</div>
+              <div class="info-value" id="res-booked"></div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Expected Delivery</div>
+              <div class="info-value" id="res-expected"></div>
+            </div>
+          </div>
+          <!-- Parties -->
+          <div class="party-grid">
+            <div class="party-card">
+              <div class="party-card__role">📤 Sender</div>
+              <div class="party-card__name" id="res-sender-name"></div>
+              <div class="party-card__addr" id="res-sender-addr"></div>
+            </div>
+            <div class="party-card">
+              <div class="party-card__role">📥 Receiver</div>
+              <div class="party-card__name" id="res-receiver-name"></div>
+              <div class="party-card__addr" id="res-receiver-addr"></div>
+            </div>
+          </div>
+          <!-- Timeline -->
+          <div class="timeline-section">
+            <h4>📍 Tracking History</h4>
+            <div class="timeline" id="res-timeline"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /result-area -->
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__bottom">
+      <span>© 2024 CourierTrack. RDBMS College Project.</span>
+      <span><a href="/" class="footer__link" style="display:inline;">← Back to Home</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/track.js"></script>
+</body>
+</html>

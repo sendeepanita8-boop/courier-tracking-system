@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard – CourierTrack</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    body { background: var(--clr-bg); }
+    /* Sidebar layout */
+    .admin-layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      background: var(--clr-accent);
+      display: flex; flex-direction: column;
+      position: fixed; left: 0; top: 0; bottom: 0; z-index: 50;
+      transition: transform var(--transition-slow);
+    }
+    .sidebar__brand {
+      padding: var(--space-6);
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .sidebar__brand-name { color: #fff; font-size: var(--fs-lg); font-weight: 800; }
+    .sidebar__brand-sub  { color: rgba(255,255,255,.45); font-size: var(--fs-xs); }
+    .sidebar__nav { flex: 1; padding: var(--space-4) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
+    .sidebar__link {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      color: rgba(255,255,255,.6);
+      font-size: var(--fs-sm); font-weight: 500;
+      transition: background var(--transition), color var(--transition);
+      cursor: pointer; border: none; background: none; text-align: left; width: 100%;
+    }
+    .sidebar__link:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .sidebar__link.active { background: rgba(245,166,35,.2); color: var(--clr-primary); }
+    .sidebar__link .icon { font-size: 1.1rem; }
+    .sidebar__footer {
+      padding: var(--space-4) var(--space-3);
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .sidebar__admin-info {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4); margin-bottom: var(--space-2);
+    }
+    .sidebar__avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(245,166,35,.3);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--clr-primary); font-weight: 700; font-size: var(--fs-sm);
+    }
+    .sidebar__admin-name { color: #fff; font-size: var(--fs-sm); font-weight: 600; }
+    .sidebar__admin-role { color: rgba(255,255,255,.45); font-size: var(--fs-xs); }
+    .logout-btn {
+      width: 100%; display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      background: rgba(239,68,68,.15); color: #fca5a5;
+      font-size: var(--fs-sm); font-weight: 600;
+      border: 1px solid rgba(239,68,68,.25);
+      cursor: pointer; transition: background var(--transition);
+    }
+    .logout-btn:hover { background: rgba(239,68,68,.25); }
+
+    /* Main content */
+    .admin-main {
+      margin-left: 240px; flex: 1;
+      display: flex; flex-direction: column;
+    }
+    .admin-topbar {
+      background: var(--clr-surface);
+      border-bottom: 1px solid var(--clr-border);
+      padding: 0 var(--space-8);
+      height: 60px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-topbar__title { font-size: var(--fs-lg); font-weight: 700; color: var(--clr-accent); }
+    .admin-content { padding: var(--space-8); }
+
+    /* Auth guard overlay */
+    #auth-guard {
+      position: fixed; inset: 0; z-index: 200;
+      background: linear-gradient(135deg, var(--clr-accent), #16213e);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-guard-box {
+      background: var(--clr-surface); border-radius: var(--radius-xl);
+      padding: var(--space-10); text-align: center; max-width: 380px;
+    }
+    .auth-guard-box .icon { font-size: 3rem; margin-bottom: var(--space-4); }
+
+    /* Tabs */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Filter row */
+    .filter-row {
+      display: flex; gap: var(--space-3); align-items: center;
+      margin-bottom: var(--space-6); flex-wrap: wrap;
+    }
+    .filter-row select {
+      padding: var(--space-2) var(--space-4);
+      border: 1.5px solid var(--clr-border); border-radius: var(--radius-full);
+      font-size: var(--fs-sm); background: var(--clr-surface); color: var(--clr-text);
+      cursor: pointer; outline: none;
+      transition: border-color var(--transition);
+    }
+    .filter-row select:focus { border-color: var(--clr-primary); }
+
+    /* Status update modal specifics */
+    .status-select {
+      width: 100%; padding: var(--space-3) var(--space-4);
+      border: 1.5px solid var(--clr-border); border-radius: var(--radius-md);
+      font-size: var(--fs-base); outline: none;
+      transition: border-color var(--transition);
+    }
+    .status-select:focus { border-color: var(--clr-primary); }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .admin-main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Auth guard (shown until session verified) -->
+<div id="auth-guard">
+  <div class="auth-guard-box">
+    <div class="icon">🔒</div>
+    <h3 style="margin-bottom:var(--space-3);">Checking Authentication…</h3>
+    <div class="spinner" style="margin:0 auto;"></div>
+    <p style="margin-top:var(--space-4);font-size:var(--fs-sm);">Redirecting to login if not authenticated.</p>
+  </div>
+</div>
+
+<div class="admin-layout" id="admin-app" style="display:none;">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1);">
+        <span style="font-size:1.5rem;">📦</span>
+        <div class="sidebar__brand-name">CourierTrack</div>
+      </div>
+      <div class="sidebar__brand-sub">Administration Panel</div>
+    </div>
+    <nav class="sidebar__nav">
+      <button class="sidebar__link active" onclick="showTab('dashboard')" id="tab-dashboard">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="sidebar__link" onclick="showTab('shipments')" id="tab-shipments">
+        <span class="icon">📦</span> Shipments
+      </button>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="sidebar__admin-info">
+        <div class="sidebar__avatar" id="admin-avatar">A</div>
+        <div>
+          <div class="sidebar__admin-name" id="admin-name">Admin</div>
+          <div class="sidebar__admin-role">Administrator</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="admin-topbar__title" id="topbar-title">Dashboard</div>
+      <div style="display:flex;gap:var(--space-3);align-items:center;">
+        <span style="font-size:var(--fs-sm);color:var(--clr-muted);" id="topbar-time"></span>
+        <a href="/" target="_blank" class="btn btn-secondary btn-sm">🌐 View Site</a>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- DASHBOARD TAB -->
+      <div class="tab-panel active" id="panel-dashboard">
+        <div id="stats-loading" class="loading-container">
+          <div class="spinner spinner-lg"></div>
+          <span>Loading statistics…</span>
+        </div>
+        <div id="stats-content" style="display:none;">
+          <div class="stat-grid mb-4" id="stat-cards"></div>
+          <div class="card mt-8">
+            <div class="card__header">
+              <div class="card__title">🕐 Recent Shipments</div>
+              <button class="btn btn-secondary btn-sm" onclick="showTab('shipments')">View All →</button>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tracking #</th>
+                    <th>Receiver</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Booked</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHIPMENTS TAB -->
+      <div class="tab-panel" id="panel-shipments">
+        <!-- Filters -->
+        <div class="filter-row">
+          <div class="search-bar" style="flex:1;max-width:360px;">
+            <span>🔍</span>
+            <input type="text" id="search-input" placeholder="Search tracking # or receiver…" oninput="debouncedSearch()"/>
+          </div>
+          <select id="status-filter" onchange="loadShipments(1)">
+            <option value="">All Statuses</option>
+            <option value="Booked">Booked</option>
+            <option value="Picked Up">Picked Up</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Out for Delivery">Out for Delivery</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="loadShipments(1)">Refresh</button>
+        </div>
+
+        <div id="shipments-loading" class="loading-container" style="display:none;">
+          <div class="spinner spinner-lg"></div><span>Loading shipments…</span>
+        </div>
+        <div id="shipments-error" class="alert alert-error mb-4 hidden"></div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tracking #</th>
+                  <th>Sender</th>
+                  <th>Receiver</th>
+                  <th>Type</th>
+                  <th>Weight</th>
+                  <th>Status</th>
+                  <th>Booked</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="shipments-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pagination mt-4" id="pagination-controls"></div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </main>
+</div>
+
+<!-- STATUS UPDATE MODAL -->
+<div class="modal-overlay hidden" id="status-modal">
+  <div class="modal">
+    <div class="modal__header">
+      <h4 style="font-size:var(--fs-xl);font-weight:700;">Update Shipment Status</h4>
+      <button class="btn btn-icon" onclick="closeModal()" style="font-size:1.2rem;color:var(--clr-muted);">✕</button>
+    </div>
+    <div class="modal__body">
+      <p style="margin-bottom:var(--space-4);font-size:var(--fs-sm);color:var(--clr-muted);">
+        Shipment: <strong id="modal-tn"></strong>
+      </p>
+      <div id="modal-error" class="alert alert-error mb-4 hidden"></div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="modal-status">New Status *</label>
+        <select id="modal-status" class="status-select">
+          <option value="">Select status…</option>
+          <option value="Picked Up">Picked Up</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Out for Delivery">Out for Delivery</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label" for="modal-location">Location</label>
+        <input type="text" id="modal-location" class="form-control" placeholder="e.g. Mumbai Hub"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="modal-remarks">Remarks</label>
+        <input type="text" id="modal-remarks" class="form-control" placeholder="Optional note…"/>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveStatusUpdate()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

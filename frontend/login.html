@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login – CourierTrack</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <style>
+    body { background: linear-gradient(135deg, var(--clr-accent) 0%, #16213e 60%, #0f3460 100%); min-height: 100vh; display: flex; flex-direction: column; }
+    .login-page { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-8); }
+    .login-card {
+      background: var(--clr-surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      padding: var(--space-10) var(--space-10);
+      width: 100%; max-width: 440px;
+    }
+    .login-logo {
+      text-align: center; margin-bottom: var(--space-8);
+    }
+    .login-logo__icon {
+      width: 64px; height: 64px; border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dk));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; margin: 0 auto var(--space-4);
+      box-shadow: 0 8px 24px rgba(245,166,35,.4);
+    }
+    .login-logo__title { font-size: var(--fs-2xl); font-weight: 800; color: var(--clr-accent); }
+    .login-logo__sub   { font-size: var(--fs-sm); color: var(--clr-muted); margin-top: var(--space-1); }
+    .login-form { display: flex; flex-direction: column; gap: var(--space-4); }
+    .pass-wrapper { position: relative; }
+    .pass-toggle {
+      position: absolute; right: var(--space-3); top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--clr-muted);
+      font-size: 1rem; padding: var(--space-1);
+      transition: color var(--transition);
+    }
+    .pass-toggle:hover { color: var(--clr-text); }
+    .login-footer-link {
+      text-align: center; font-size: var(--fs-sm);
+      color: var(--clr-muted); margin-top: var(--space-4);
+    }
+    .login-footer-link a { color: var(--clr-primary-dk); font-weight: 600; }
+    .login-footer-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo__icon">⚙️</div>
+      <div class="login-logo__title">Admin Portal</div>
+      <div class="login-logo__sub">CourierTrack Administration</div>
+    </div>
+
+    <div id="login-error" class="alert alert-error mb-4 hidden">
+      <span class="alert__icon">⚠️</span>
+      <span id="login-error-msg"></span>
+    </div>
+
+    <form id="login-form" class="login-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="admin" autocomplete="username" required/>
+        <div class="form-error" id="err-username"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="pass-wrapper">
+          <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" autocomplete="current-password" required style="padding-right:3rem;"/>
+          <button type="button" class="pass-toggle" id="pass-toggle" onclick="togglePassword()" aria-label="Show/hide password">👁️</button>
+        </div>
+        <div class="form-error" id="err-password"></div>
+      </div>
+      <button type="submit" class="btn btn-primary w-full btn-lg" id="login-btn">
+        Login to Dashboard
+      </button>
+    </form>
+
+    <div class="login-footer-link">
+      <a href="/">← Back to Homepage</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script src="/js/login.js"></script>
+</body>
+</html>
